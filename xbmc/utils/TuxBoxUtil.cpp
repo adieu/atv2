@@ -1237,12 +1237,14 @@ bool CTuxBoxUtil::BoxInfo(TiXmlElement *pRootElement)
         sBoxInfo.image_version = pIt->FirstChild()->Value();
         CLog::Log(LOGDEBUG, "%s - Image Version: %s", __FUNCTION__, pIt->FirstChild()->Value());
       }
+/*
       pIt = pNode->FirstChild("url");
       if (pIt)
       {
         sBoxInfo.image_url = pIt->FirstChild()->Value();
         CLog::Log(LOGDEBUG, "%s - Image Url: %s", __FUNCTION__, pIt->FirstChild()->Value());
       }
+*/
       pIt = pNode->FirstChild("comment");
       if (pIt)
       {
