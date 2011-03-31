@@ -989,6 +989,37 @@ namespace PYXBMC
     return Py_BuildValue((char*)"ss",strSize.c_str(), strHash.c_str());
   } 
 
+  PyDoc_STRVAR(subHashAndFileSize2__doc__,
+    "subHash(file)\n"
+    "\n"
+    "file        : file to calculate subtitle hash for"
+    "\n"
+    "example:\n"
+    "  hash = xbmc.subHashAndFileSize2(file)\n");
+  PyObject* XBMC_subHashAndFileSize2(PyObject *self, PyObject *args, PyObject *kwds)
+  {
+    PyObject *f_line;
+    if (!PyArg_ParseTuple(
+      args,
+      (char*)"O",
+      &f_line))
+    {
+      return NULL;
+    }
+    CStdString strSource;
+    if (!PyXBMCGetUnicodeString(strSource, f_line, 1)) return NULL;
+
+    CStdString digest1;
+    CStdString digest2;
+    CStdString digest3;
+    CStdString digest4;
+    Py_BEGIN_ALLOW_THREADS
+    CFileUtils::SubtitleFileSizeAndHash2(strSource, digest1, digest2, digest3, digest4);
+    Py_END_ALLOW_THREADS
+
+    return Py_BuildValue((char*)"ssss",digest1.c_str(), digest2.c_str(), digest3.c_str(), digest4.c_str());
+  }
+
   // define c functions to be used in python here
   PyMethodDef xbmcMethods[] = {
     {(char*)"output", (PyCFunction)XBMC_Output, METH_VARARGS|METH_KEYWORDS, output__doc__},
@@ -1036,6 +1067,7 @@ namespace PYXBMC
 
     {(char*)"skinHasImage", (PyCFunction)XBMC_SkinHasImage, METH_VARARGS|METH_KEYWORDS, skinHasImage__doc__},
     {(char*)"subHashAndFileSize", (PyCFunction)XBMC_subHashAndFileSize, METH_VARARGS, subHashAndFileSize__doc__},
+    {(char*)"subHashAndFileSize2", (PyCFunction)XBMC_subHashAndFileSize2, METH_VARARGS, subHashAndFileSize2__doc__},
     {NULL, NULL, 0, NULL}
   };
 

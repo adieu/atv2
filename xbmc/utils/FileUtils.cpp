@@ -9,6 +9,7 @@
 #include "Util.h"
 #include "FileSystem/MultiPathDirectory.h"
 #include <vector>
+#include <openssl/md5.h>
 
 using namespace XFILE;
 using namespace std;
@@ -100,6 +101,59 @@ bool CFileUtils::SubtitleFileSizeAndHash(const CStdString &path, CStdString &str
   file.Close(); //close file
   strHash.Format("%"PRIx64"", hash);
   strSize.Format("%d", fileSize);
+  return true;
+}
+
+bool CFileUtils::SubtitleFileSizeAndHash2(const CStdString &path, CStdString &digest1, CStdString &digest2, CStdString &digest3, CStdString &digest4)
+{
+  const size_t chksum_block_size = 4096;
+
+  CFile file;
+  size_t i;
+  uint8_t buffer1[chksum_block_size*4];
+  uint64_t fileSize ;
+  unsigned char * tmp_hash;
+  char digest[MD5_DIGEST_LENGTH*2];
+  // In natural language it calculates: size + 64k chksum of the first and last 64k
+  // (even if they overlap because the file is smaller than 128k).
+
+  file.Open(path, READ_NO_CACHE); //open file
+  fileSize = file.GetLength();
+  file.Seek((int64_t)chksum_block_size*sizeof(uint8_t)); //seek to the end of the file
+  file.Read(buffer1, chksum_block_size*sizeof(uint8_t)); //read first 64k
+  file.Seek((int64_t)fileSize/3*2); //seek to the end of the file
+  file.Read(&buffer1[chksum_block_size], chksum_block_size*sizeof(uint8_t)); //read last 64k
+  file.Seek( (int64_t)fileSize/3); //seek to the end of the file
+  file.Read(&buffer1[chksum_block_size*2], chksum_block_size*sizeof(uint8_t)); //read last 64k
+  file.Seek(-(int64_t)chksum_block_size*sizeof(uint8_t)*2, SEEK_END); //seek to the end of the file
+  file.Read(&buffer1[chksum_block_size*3], chksum_block_size*sizeof(uint8_t)); //read last 64k
+
+  file.Close(); //close file
+
+  tmp_hash = MD5((const unsigned char*)&buffer1[0], chksum_block_size, NULL);
+  for (i=0;i<MD5_DIGEST_LENGTH;i++) {
+    sprintf(&digest[i*2], "%02x", tmp_hash[i]);
+  }
+  digest1.Format("%s", digest);
+
+  tmp_hash = MD5((const unsigned char*)&buffer1[chksum_block_size], chksum_block_size, NULL);
+  for (i=0;i<MD5_DIGEST_LENGTH;i++) {
+    sprintf(&digest[i*2], "%02x", tmp_hash[i]);
+  }
+  digest2.Format("%s", digest);
+
+  tmp_hash = MD5((const unsigned char*)&buffer1[chksum_block_size*2], chksum_block_size, NULL);
+  for (i=0;i<MD5_DIGEST_LENGTH;i++) {
+    sprintf(&digest[i*2], "%02x", tmp_hash[i]);
+  }
+  digest3.Format("%s", digest);
+
+  tmp_hash = MD5((const unsigned char*)&buffer1[chksum_block_size*3], chksum_block_size, NULL);
+  for (i=0;i<MD5_DIGEST_LENGTH;i++) {
+    sprintf(&digest[i*2], "%02x", tmp_hash[i]);
+  }
+  digest4.Format("%s", digest);
+
   return true;
 }
 
